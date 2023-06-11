@@ -863,6 +863,8 @@ def controller_and_data_macros(entry, i, macro):
     # the phandle's node) and associated data macros for a
     # ControllerAndData.
 
+    is_clock = macro.endswith("clocks")
+
     ret = {}
     data = entry.data
 
@@ -874,6 +876,12 @@ def controller_and_data_macros(entry, i, macro):
     for cell, val in data.items():
         ret[f"{macro}_IDX_{i}_VAL_{str2ident(cell)}"] = val
         ret[f"{macro}_IDX_{i}_VAL_{str2ident(cell)}_EXISTS"] = 1
+
+    if is_clock:
+        for it, (_, val) in enumerate(data.items()):
+            cname = "GENERIC_CLK_CELL_{}".format(it)
+            ret[f"{macro}_IDX_{i}_VAL_{str2ident(cname)}"] = val
+            ret[f"{macro}_IDX_{i}_VAL_{str2ident(cname)}_EXISTS"] = 1
 
     if not entry.name:
         return ret
