@@ -68,40 +68,32 @@ static uint8_t const xtal_freq[] = {
 #endif
 };
 
-static int clock_control_esp32_on(const struct device *dev,
-				  clock_control_subsys_t sys)
+static int clock_control_esp32_on(const struct clk *clk)
 {
-	ARG_UNUSED(dev);
-	periph_module_enable((periph_module_t)sys);
+	periph_module_enable((periph_module_t)clk->dt_spec.cell_0);
 	return 0;
 }
 
-static int clock_control_esp32_off(const struct device *dev,
-				   clock_control_subsys_t sys)
+static int clock_control_esp32_off(const struct clk *clk)
 {
-	ARG_UNUSED(dev);
-	periph_module_disable((periph_module_t)sys);
+	periph_module_disable((periph_module_t)clk->dt_spec.cell_0);
 	return 0;
 }
 
-static int clock_control_esp32_async_on(const struct device *dev,
-					clock_control_subsys_t sys,
+static int clock_control_esp32_async_on(const struct clk *clk,
 					clock_control_cb_t cb,
 					void *user_data)
 {
-	ARG_UNUSED(dev);
-	ARG_UNUSED(sys);
 	ARG_UNUSED(cb);
 	ARG_UNUSED(user_data);
 	return -ENOTSUP;
 }
 
-static enum clock_control_status clock_control_esp32_get_status(const struct device *dev,
-								clock_control_subsys_t sys)
+static enum clock_control_status clock_control_esp32_get_status(const struct clk *clk)
 {
-	ARG_UNUSED(dev);
-	uint32_t clk_en_reg = periph_ll_get_clk_en_reg((periph_module_t)sys);
-	uint32_t clk_en_mask =  periph_ll_get_clk_en_mask((periph_module_t)sys);
+	periph_module_t module = (periph_module_t)clk->dt_spec.cell_0;
+	uint32_t clk_en_reg = periph_ll_get_clk_en_reg(module);
+	uint32_t clk_en_mask =  periph_ll_get_clk_en_mask(module);
 
 	if (DPORT_GET_PERI_REG_MASK(clk_en_reg, clk_en_mask)) {
 		return CLOCK_CONTROL_STATUS_ON;
@@ -109,12 +101,9 @@ static enum clock_control_status clock_control_esp32_get_status(const struct dev
 	return CLOCK_CONTROL_STATUS_OFF;
 }
 
-static int clock_control_esp32_get_rate(const struct device *dev,
-					clock_control_subsys_t sub_system,
+static int clock_control_esp32_get_rate(const struct clk *clk,
 					uint32_t *rate)
 {
-	ARG_UNUSED(sub_system);
-
 	rtc_cpu_freq_config_t config;
 
 	rtc_clk_cpu_freq_get_config(&config);
