@@ -66,10 +66,9 @@ LOG_MODULE_REGISTER(can_esp32_twai, CONFIG_CAN_LOG_LEVEL);
 #endif /* !CONFIG_SOC_ESP32 */
 
 struct can_esp32_twai_config {
+	struct clk clk;
 	mm_reg_t base;
 	const struct pinctrl_dev_config *pcfg;
-	const struct device *clock_dev;
-	const clock_control_subsys_t clock_subsys;
 	int irq_source;
 #ifndef CONFIG_SOC_ESP32
 	/* 32-bit variant of output clock divider register required for non-ESP32 MCUs */
@@ -193,7 +192,7 @@ static int can_esp32_twai_init(const struct device *dev)
 		return err;
 	}
 
-	err = clock_control_on(twai_config->clock_dev, twai_config->clock_subsys);
+	err = clock_control_on(&twai_config->clk);
 	if (err != 0) {
 		LOG_ERR("failed to enable CAN clock (err %d)", err);
 		return err;
@@ -284,8 +283,7 @@ const struct can_driver_api can_esp32_twai_driver_api = {
                                                                                                    \
 	static const struct can_esp32_twai_config can_esp32_twai_config_##inst = {                 \
 		.base = DT_INST_REG_ADDR(inst),                                                    \
-		.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(inst)),                             \
-		.clock_subsys = (clock_control_subsys_t)DT_INST_CLOCKS_CELL(inst, offset),         \
+		.clk = DT_INST_CLOCKS_GET_CLK_BY_IDX(inst, 0),                                     \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(inst),                                      \
 		.irq_source = DT_INST_IRQN(inst),                                                  \
 		TWAI_CDR32_INIT(inst)                                                              \
