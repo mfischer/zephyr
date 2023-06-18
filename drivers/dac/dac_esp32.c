@@ -22,8 +22,7 @@ LOG_MODULE_REGISTER(esp32_dac, CONFIG_DAC_LOG_LEVEL);
 
 struct dac_esp32_config {
 	int irq_source;
-	const struct device *clock_dev;
-	clock_control_subsys_t clock_subsys;
+	struct clk *clk;
 };
 
 static int dac_esp32_write_value(const struct device *dev,
@@ -55,18 +54,17 @@ static int dac_esp32_init(const struct device *dev)
 {
 	const struct dac_esp32_config *cfg = dev->config;
 
-	if (!cfg->clock_dev) {
+	if (!cfg->clk) {
 		LOG_ERR("Clock device missing");
 		return -EINVAL;
 	}
 
-	if (!device_is_ready(cfg->clock_dev)) {
+	if (!device_is_ready(cfg->clk.dev)) {
 		LOG_ERR("Clock device not ready");
 		return -ENODEV;
 	}
 
-	if (clock_control_on(cfg->clock_dev,
-		(clock_control_subsys_t) &cfg->clock_subsys) != 0) {
+	if (clock_control_on(&cfg->clk) != 0) {
 		LOG_ERR("DAC clock setup failed (%d)", -EIO);
 		return -EIO;
 	}
@@ -83,8 +81,7 @@ static const struct dac_driver_api dac_esp32_driver_api = {
 												\
 	static const struct dac_esp32_config dac_esp32_config_##id = {				\
 		.irq_source = DT_INST_IRQN(id),							\
-		.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(id)),				\
-		.clock_subsys =	(clock_control_subsys_t) DT_INST_CLOCKS_CELL(id, offset),	\
+		.clk = DT_INST_CLOCKS_GET_CLK_BY_IDX(id, 0),                                    \
 	};											\
 												\
 	DEVICE_DT_INST_DEFINE(id,								\
