@@ -38,6 +38,18 @@ extern "C" {
 /* Used to select all subsystem of a clock controller */
 #define CLOCK_CONTROL_SUBSYS_ALL	NULL
 
+struct clk_dt_spec {
+	uint32_t cell_0;
+	uint32_t cell_1;
+	uint32_t cell_2;
+};
+
+struct clk {
+	const struct device *dev;
+	const struct clk_dt_spec dt_spec;
+	const void *data;
+};
+
 /**
  * @brief Current clock status.
  */

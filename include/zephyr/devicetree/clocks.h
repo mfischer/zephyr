@@ -137,6 +137,78 @@ extern "C" {
 	DT_PHANDLE_BY_IDX(node_id, clocks, idx)
 
 /**
+ * @brief Get the clock struct for a given clock from
+ *        "clocks" phandle-array property at an index
+ *
+ * Example devicetree fragment:
+ *
+ *     clk1: clock-controller@... { ... };
+ *
+ *     clk2: clock-controller@... { ... };
+ *
+ *     n: node {
+ *             clocks = <&clk1 10 20>, <&clk2 30 40>;
+ *     };
+ *
+ * Example usage:
+ *
+ *     DT_CLOCKS_GET_CLK_BY_IDX(DT_NODELABEL(n), 0) // { DT_DEVICE_GET(clk1), 10, 20, 0 }
+ *     DT_CLOCKS_GET_CLK_BY_IDX(DT_NODELABEL(n), 1) // { DT_DEVICE_GET(clk2), 30, 40, 0 }
+ *
+ * @param node_id node identifier
+ * @param idx logical index into "clocks"
+ * @return the node identifier for the clock controller referenced at
+ *         index "idx"
+ * @see DT_PHANDLE_BY_IDX()
+ */
+#define DT_CLOCKS_GET_CLK_BY_IDX(node_id, idx) \
+{ \
+	.dev = DEVICE_DT_GET(DT_CLOCKS_CTLR_BY_IDX(node_id, idx)), \
+	.dt_spec = { \
+		.cell_0 = DT_PHA_BY_IDX_OR(node_id, clocks, idx, generic_clk_cell_0, 0), \
+		.cell_1 = DT_PHA_BY_IDX_OR(node_id, clocks, idx, generic_clk_cell_1, 0), \
+		.cell_2 = DT_PHA_BY_IDX_OR(node_id, clocks, idx, generic_clk_cell_2, 0), \
+	}, \
+}
+
+/**
+ * @brief Get the clock struct for a given clock from
+ *        "clocks" phandle-array property at an index
+ *
+ * Example devicetree fragment:
+ *
+ *     clk1: clock-controller@... { ... };
+ *
+ *     clk2: clock-controller@... { ... };
+ *
+ *     n: node {
+ *             compatbile = "vendor,foo";
+ *             clocks = <&clk1 10 20>, <&clk2 30 40>;
+ *     };
+ *
+ * Example usage:
+ *
+ *     #define DT_DRV_COMPAT "vendor_foo"
+ *     DT_CLOCKS_INST_GET_CLK_BY_IDX(0, 0) // { DT_DEVICE_GET(clk1), 10, 20, 0 }
+ *     DT_CLOCKS_INST_GET_CLK_BY_IDX(0, 1) // { DT_DEVICE_GET(clk2), 30, 40, 0 }
+ *
+ * @param inst identifier
+ * @param idx logical index into "clocks"
+ * @return the node identifier for the clock controller referenced at
+ *         index "idx"
+ * @see DT_PHANDLE_BY_IDX()
+ */
+#define DT_INST_CLOCKS_GET_CLK_BY_IDX(inst, idx) \
+{ \
+	.dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR_BY_IDX(node_id, idx)), \
+	.dt_spec = { \
+		.cell_0 = DT_INST_PHA_BY_IDX_OR(inst, clocks, idx, generic_clk_cell_0, 0), \
+		.cell_1 = DT_INST_PHA_BY_IDX_OR(inst, clocks, idx, generic_clk_cell_1, 0), \
+		.cell_2 = DT_INST_PHA_BY_IDX_OR(inst, clocks, idx, generic_clk_cell_2, 0), \
+	}, \
+}
+
+/**
  * @brief Equivalent to DT_CLOCKS_CTLR_BY_IDX(node_id, 0)
  * @param node_id node identifier
  * @return a node identifier for the clocks controller at index 0
